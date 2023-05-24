@@ -8,6 +8,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.ActionMenuView;
 import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -18,8 +19,10 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Canvas;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -38,6 +41,7 @@ import com.example.babyapp.repositories.db.entities.Text;
 import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.bottomnavigation.BottomNavigationItemView;
 import com.google.android.material.bottomnavigation.BottomNavigationMenuView;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
@@ -50,7 +54,7 @@ import it.xabaras.android.recyclerview.swipedecorator.RecyclerViewSwipeDecorator
 public class MainActivity extends AppCompatActivity {
 
     private RecyclerView rv;
-    private FloatingActionButton fab;
+    private BottomNavigationView navigationView;
 
 
     private PostDao dao;
@@ -59,10 +63,63 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        initComponents();
-        registerEventHandlers();
-        swipeAction();
-        loadData();
+        navigationView = findViewById(R.id.bottomNavigationView);
+
+
+        HomeFragment homeFragment = new HomeFragment(this);
+
+        getSupportFragmentManager()
+                .beginTransaction()
+                .add(R.id.main_container, homeFragment)
+                .commit();
+        navigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                switch (item.getItemId()) {
+                    case R.id.menu_home:
+                        loadFragment(new HomeFragment(MainActivity.this));
+                        return true;
+                    case R.id.menu_search:
+                        loadFragment(new SearchFragment());
+                        return true;
+                    case R.id.menu_new:
+                        loadFragment(new NewPostFragment());
+                        return true;
+                    case R.id.menu_profile:
+                        loadFragment(new ProfileFragment(MainActivity.this));
+                        return true;
+                    case R.id.menu_settings:
+                        loadFragment(new SettingsFragment());
+                        return true;
+
+                }
+                return false;
+            }
+        });
+
+    }
+
+    public void loadFragment(Fragment fragment) {
+        switch (fragment.getClass().getSimpleName()) {
+            case "HomeFragment":
+                getSupportFragmentManager().beginTransaction().replace(R.id.main_container, new HomeFragment(this)).commit();
+                break;
+            case "SearchFragment":
+                getSupportFragmentManager().beginTransaction().replace(R.id.main_container, new SearchFragment()).commit();
+                break;
+            case "ProfileFragment":
+                getSupportFragmentManager().beginTransaction().replace(R.id.main_container, new ProfileFragment(this)).commit();
+                break;
+            case "SettingsFragment":
+                getSupportFragmentManager().beginTransaction().replace(R.id.main_container, new SettingsFragment()).commit();
+                break;
+            case "NewPostFragment":
+                getSupportFragmentManager().beginTransaction().replace(R.id.main_container, new NewPostFragment()).commit();
+                break;
+            default:
+                Log.e("Fragment", "Invalid Fragment type");
+                break;
+        }
     }
 
     @Override
@@ -75,114 +132,6 @@ public class MainActivity extends AppCompatActivity {
         //}
     }
 
-    private void initComponents(){
-        rv = findViewById(R.id.recyclerViewMain);
-        fab = findViewById(R.id.floatingActionButton2);
-
-        BabyAppDatabase db = BabyAppDatabase.getDatabase(MainActivity.this);
-        dao = db.postDao();
-    }
-
-    private void loadData(){
-        List<Post> posts = dao.loadAllPosts();
-        MainAdapter adapter = new MainAdapter(posts, getApplicationContext(),MainActivity.this);
-        rv.setAdapter(adapter);
-        LinearLayoutManager llm = new LinearLayoutManager(this);
-        rv.setLayoutManager(llm);
-        rv.setHasFixedSize(true);
-        rv.addItemDecoration(new DividerItemDecoration(this,LinearLayoutManager.VERTICAL));
-    }
-
-    private void swipeAction(){
-        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(callBackMethod);
-        itemTouchHelper.attachToRecyclerView(rv);
-    }
-
-    ItemTouchHelper.SimpleCallback callBackMethod = new ItemTouchHelper.SimpleCallback(0,ItemTouchHelper.RIGHT | ItemTouchHelper.LEFT) {
-        @Override
-        public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
-            return false;
-        }
-
-        @Override
-        public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
-            int position = viewHolder.getAdapterPosition();
-
-            switch (direction){
-                case ItemTouchHelper.LEFT:
-                    deletePost(getPost(position));
-                    rv.getAdapter().notifyItemRemoved(position);
-                    break;
-                    case ItemTouchHelper.RIGHT:
-                        //check or uncheck note
-
-                        break;
-            }
-        }
-
-        @Override
-        public void onChildDraw(@NonNull Canvas c, @NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
-            new RecyclerViewSwipeDecorator.Builder(c,recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive )
-                    .addSwipeLeftLabel("Delete")
-                    .setSwipeLeftLabelColor(getResources().getColor(R.color.white))
-                    .addSwipeLeftActionIcon(R.drawable.baseline_delete_24)
-                    .setSwipeLeftActionIconTint(getResources().getColor(R.color.white))
-                    .addSwipeLeftBackgroundColor(getResources().getColor(com.google.android.material.R.color.design_default_color_error))
-                    .create()
-                    .decorate();
-            super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
-        }
-    };
-
-    private void deletePost(final Post post){
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Emin misiniz?");
-        builder.setMessage(post.title + " başlıklı post silinecektir.");
-        builder.setIcon(R.drawable.baseline_warning_24);
-        DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                if (i == DialogInterface.BUTTON_POSITIVE){
-                    dao.delete(post);
-                    reloadData();
-                    Snackbar snackbar = Snackbar.make(rv, post.title + "başlıklı post veritabanından silindi", Snackbar.LENGTH_SHORT);
-                    snackbar.setAction("Geri Al", new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            dao.insert(post);
-                            reloadData();
-                        }
-                    });
-                    //snackbar.show();
-                } else {
-                    // hiç bir şey yapma
-                }
-            }
-        };
-        builder.setPositiveButton("Evet", listener);
-        builder.setNegativeButton("Hayır",listener);
-        AlertDialog alertDialog = builder.create();
-        alertDialog.show();
-    }
-
-    public void reloadData(){
-        List<Post> posts = dao.loadAllPosts();
-        MainAdapter adapter = new MainAdapter(posts, getApplicationContext(),MainActivity.this);
-        rv.setAdapter(adapter);
-    }
-
-
-    private void registerEventHandlers(){
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(MainActivity.this, NewPostActivity.class);
-                startActivity(intent);
-                overridePendingTransition(R.anim.slide_up, R.anim.stay);
-            }
-        });
-
-    }
 
 
 }

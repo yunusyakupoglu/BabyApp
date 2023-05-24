@@ -1,6 +1,8 @@
 package com.example.babyapp.repositories.db;
 
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
 
 import androidx.annotation.NonNull;
 import androidx.room.Database;
@@ -35,7 +37,23 @@ public abstract class BabyAppDatabase extends RoomDatabase{
     private static final Migration MIGRATION = new Migration(1, 2) {
         @Override
         public void migrate(SupportSQLiteDatabase database) {
-            // Veri islemleri
+            // Veri işlemleri
+            database.execSQL("CREATE TABLE IF NOT EXISTS room_table_modification_log (id INTEGER PRIMARY KEY AUTOINCREMENT, invalidated INTEGER NOT NULL)");
+
+            // Eksik olan tablo oluşturuldu, diğer işlemler buraya eklenebilir
+
+            // Örnek: Tabloya veri ekleme
+            ContentValues values = new ContentValues();
+            values.put("invalidated", 1);
+            database.insert("room_table_modification_log", SQLiteDatabase.CONFLICT_REPLACE, values);
+
+            // Örnek: Tablodan veri silme
+            database.delete("room_table_modification_log", "invalidated = ?", new String[]{"0"});
+
+            // Örnek: Tablodaki verileri güncelleme
+            ContentValues updatedValues = new ContentValues();
+            updatedValues.put("invalidated", 0);
+            database.update("room_table_modification_log", SQLiteDatabase.CONFLICT_REPLACE, updatedValues, "invalidated = ?", new String[]{"1"});
         }
     };
 

@@ -31,6 +31,7 @@ import com.example.babyapp.repositories.db.daos.TextDao;
 import com.example.babyapp.repositories.db.entities.Post;
 import com.example.babyapp.repositories.db.entities.Text;
 import com.example.babyapp.views.DetailActivity;
+import com.example.babyapp.views.DetailsFragment;
 import com.example.babyapp.views.MainActivity;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.snackbar.Snackbar;
@@ -105,10 +106,10 @@ public class MainAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
         vh.cardView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(context, DetailActivity.class);
-                intent.putExtra("nesne", (Serializable) post);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                context.startActivity(intent);
+                DetailsFragment fragment = DetailsFragment.newInstance(post);
+                mainActivity.getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.main_container, fragment)
+                        .commit();
             }
         });
 

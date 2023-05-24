@@ -1,25 +1,25 @@
 package com.example.babyapp.views;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+
 import android.provider.MediaStore;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
+import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.babyapp.R;
@@ -29,10 +29,8 @@ import com.example.babyapp.repositories.db.entities.Post;
 import com.google.android.material.appbar.MaterialToolbar;
 
 import java.io.File;
-import java.io.IOException;
 
-public class NewPostActivity extends AppCompatActivity {
-
+public class NewPostFragment extends Fragment {
     private String selectedImageData;
     private MaterialToolbar toolbar;
     private EditText txtDescription, txtTitle;
@@ -46,25 +44,35 @@ public class NewPostActivity extends AppCompatActivity {
 
     private static final int IMAGE_PICK_MODE = 1000;
     private static final int PERMISSION_CODE = 1001;
+    public NewPostFragment() {
+        // Required empty public constructor
+    }
+
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_new_post);
-        initComponents();
-        setToolbar();
-        registerEventHandlers();
 
     }
 
-    private void initComponents(){
-        db = BabyAppDatabase.getDatabase(NewPostActivity.this);
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_new_post, container, false);
+        initComponents(view);
+        registerEventHandlers();
+
+        return view;
+    }
+
+    private void initComponents(View view){
+        db = BabyAppDatabase.getDatabase(mainActivity);
         dao = db.postDao();
         //  rv = findViewById(R.id.recyclerView_main);
-        toolbar = findViewById(R.id.materialToolbar);
-        txtDescription = findViewById(R.id.txtDescription);
-        txtTitle = findViewById(R.id.txtTitle);
-        imgButton = findViewById(R.id.imageButton);
+        toolbar = view.findViewById(R.id.materialToolbar);
+        txtDescription = view.findViewById(R.id.txtDescription);
+        txtTitle = view.findViewById(R.id.txtTitle);
+        imgButton = view.findViewById(R.id.imageButton);
     }
 
     private void registerEventHandlers(){
@@ -73,7 +81,7 @@ public class NewPostActivity extends AppCompatActivity {
             public void onClick(View view) {
                 // check permission
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
-                    if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED){
+                    if (mainActivity.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED){
                         //permission not granted, request it.
                         String[] permissions = {Manifest.permission.READ_EXTERNAL_STORAGE};
                         //show popup for runtime permission
@@ -110,16 +118,16 @@ public class NewPostActivity extends AppCompatActivity {
                     pickImageFromGallery();
                 } else {
                     //permission was denied
-                    Toast.makeText(this, "Permission denied...!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(mainActivity, "Permission denied...!", Toast.LENGTH_SHORT).show();
                 }
             }
         }
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == RESULT_OK && requestCode == IMAGE_PICK_MODE) {
+        if (resultCode == mainActivity.RESULT_OK && requestCode == IMAGE_PICK_MODE) {
             //imageViewFile.setImageURI(data.getData());
             Uri selectedImageUri = data.getData();
             // Get the path from the Uri
@@ -136,7 +144,7 @@ public class NewPostActivity extends AppCompatActivity {
     public String getPathFromURI(Uri contentUri) {
         String res = null;
         String[] proj = {MediaStore.Images.Media.DATA};
-        Cursor cursor = getContentResolver().query(contentUri, proj, null, null, null);
+        Cursor cursor = mainActivity.getContentResolver().query(contentUri, proj, null, null, null);
         if (cursor.moveToFirst()) {
             int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
             res = cursor.getString(column_index);
@@ -151,12 +159,11 @@ public class NewPostActivity extends AppCompatActivity {
     }
 
     private void setToolbar(){
-        setSupportActionBar(toolbar);
+        mainActivity.setSupportActionBar(toolbar);
     }
 
-    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.toolbar_menu,menu);
+        mainActivity.getMenuInflater().inflate(R.menu.toolbar_menu,menu);
         return true;
     }
 
@@ -166,8 +173,8 @@ public class NewPostActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.home:
-                finish();
-                overridePendingTransition(R.anim.stay, R.anim.slide_down);
+                mainActivity.finish();
+                mainActivity.overridePendingTransition(R.anim.stay, R.anim.slide_down);
                 return true;
             case R.id.insert:
                 Post post = new Post();
@@ -175,7 +182,7 @@ public class NewPostActivity extends AppCompatActivity {
                 post.title = txtTitle.getText().toString();
                 post.fileUri = selectedImageData;
                 dao.insert(post);
-                Toast.makeText(NewPostActivity.this, "Post başarıyla kaydedildi.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(mainActivity, "Post başarıyla kaydedildi.", Toast.LENGTH_SHORT).show();
                 homeFragment.reloadData();
             default:
                 return super.onOptionsItemSelected(item);
