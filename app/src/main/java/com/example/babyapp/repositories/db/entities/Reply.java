@@ -24,6 +24,16 @@ public class Reply implements Serializable {
 
     public long textId;
 
+    public String UserId;
+
+    public String getUserId() {
+        return UserId;
+    }
+
+    public void setUserId(String userId) {
+        UserId = userId;
+    }
+
     public long getId() {
         return id;
     }

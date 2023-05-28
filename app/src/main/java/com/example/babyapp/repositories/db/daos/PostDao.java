@@ -26,4 +26,7 @@ public interface PostDao {
     @Query("SELECT * FROM Post WHERE id=:id")
     Post loadPostById(long id);
 
+    @Query("SELECT * FROM Post WHERE UserId=:uid")
+    List<Post> loadPostsByUId(String uid);
+
 }

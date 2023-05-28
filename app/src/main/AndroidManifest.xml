@@ -31,9 +31,6 @@
             android:name=".views.DetailActivity"
             android:exported="false" />
         <activity
-            android:name=".views.NewPostActivity"
-            android:exported="false" />
-        <activity
             android:name=".views.MainActivity"
             android:exported="false" />
     </application>

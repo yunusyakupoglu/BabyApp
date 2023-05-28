@@ -69,21 +69,6 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/btnMainQuestion" />
 
-                <TextView
-                    android:id="@+id/textView"
-                    android:layout_width="wrap_content"
-                    android:layout_height="38dp"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginTop="16dp"
-                    android:fontFamily="serif-monospace"
-                    android:gravity="center_vertical"
-                    android:text="1 Yorum 3 Soru 26 Yanıt"
-                    android:textAllCaps="false"
-                    android:textColor="#000000"
-                    android:textStyle="bold"
-                    app:layout_constraintStart_toEndOf="@+id/btnMainQuestion"
-                    app:layout_constraintTop_toBottomOf="@+id/imgMainImage" />
-
                 <com.google.android.material.imageview.ShapeableImageView
                     android:id="@+id/imgPersonAvatar"
                     android:layout_width="50dp"

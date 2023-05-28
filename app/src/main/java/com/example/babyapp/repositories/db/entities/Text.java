@@ -16,6 +16,16 @@ public class Text implements Serializable {
 
     public long postId;
 
+    public String UserId;
+
+    public String getUserId() {
+        return UserId;
+    }
+
+    public void setUserId(String userId) {
+        UserId = userId;
+    }
+
     public long getPostId() {
         return postId;
     }

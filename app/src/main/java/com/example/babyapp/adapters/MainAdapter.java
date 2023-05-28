@@ -33,8 +33,13 @@ import com.example.babyapp.repositories.db.entities.Text;
 import com.example.babyapp.views.DetailActivity;
 import com.example.babyapp.views.DetailsFragment;
 import com.example.babyapp.views.MainActivity;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.io.Serializable;
 import java.util.List;
@@ -59,7 +64,7 @@ public class MainAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
 
 
     public class CardViewDesignHolder extends RecyclerView.ViewHolder{
-        private TextView txtContent;
+        private TextView txtContent, txtPersonName;
         private CardView cardView;
         private ImageView imgMain, imgAvatar;
 
@@ -69,6 +74,7 @@ public class MainAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
 
         private EditText txtCommentInput, txtQuestionInput;
         private TextDao textDao;
+        private FirebaseFirestore db;
 
 
 
@@ -82,7 +88,7 @@ public class MainAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
             btnQuestion = itemView.findViewById(R.id.btnMainQuestion);
             btnSendComment = itemView.findViewById(R.id.btnSendComment);
             txtCommentInput = itemView.findViewById(R.id.txtCommentInput);
-
+            txtPersonName = itemView.findViewById(R.id.txtPersonName);
         }
     }
 
@@ -98,6 +104,31 @@ public class MainAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         final Post post = posts.get(position);
         MainAdapter.CardViewDesignHolder vh = (MainAdapter.CardViewDesignHolder) holder;
+
+        vh.db = FirebaseFirestore.getInstance();
+        DocumentReference userRef = vh.db.collection("user").document(post.getUserId());
+        userRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                if (task.isSuccessful()) {
+                    DocumentSnapshot document = task.getResult();
+                    if (document.exists()) {
+                        // Retrieve user information
+                        String userName = document.getString("username");
+                        String profilePhoto = document.getString("profilephoto");
+                        // Display user information
+                        vh.txtPersonName.setText(userName);
+                        vh.imgAvatar.setImageURI(Uri.parse(profilePhoto));
+                    } else {
+                        // Document doesn't exist
+                    }
+                } else {
+                    // An error occurred
+                }
+            }
+        });
+
+
         vh.txtContent.setText(post.getTitle());
         vh.imgMain.setImageURI(Uri.parse(post.getFileUri()));
         vh.imgAvatar.setImageURI(Uri.parse(post.getFileUri()));

@@ -79,11 +79,8 @@ public class MainActivity extends AppCompatActivity {
                     case R.id.menu_home:
                         loadFragment(new HomeFragment(MainActivity.this));
                         return true;
-                    case R.id.menu_search:
-                        loadFragment(new SearchFragment());
-                        return true;
                     case R.id.menu_new:
-                        loadFragment(new NewPostFragment());
+                        loadFragment(new NewPostFragment(MainActivity.this));
                         return true;
                     case R.id.menu_profile:
                         loadFragment(new ProfileFragment(MainActivity.this));
@@ -104,9 +101,6 @@ public class MainActivity extends AppCompatActivity {
             case "HomeFragment":
                 getSupportFragmentManager().beginTransaction().replace(R.id.main_container, new HomeFragment(this)).commit();
                 break;
-            case "SearchFragment":
-                getSupportFragmentManager().beginTransaction().replace(R.id.main_container, new SearchFragment()).commit();
-                break;
             case "ProfileFragment":
                 getSupportFragmentManager().beginTransaction().replace(R.id.main_container, new ProfileFragment(this)).commit();
                 break;
@@ -114,7 +108,7 @@ public class MainActivity extends AppCompatActivity {
                 getSupportFragmentManager().beginTransaction().replace(R.id.main_container, new SettingsFragment()).commit();
                 break;
             case "NewPostFragment":
-                getSupportFragmentManager().beginTransaction().replace(R.id.main_container, new NewPostFragment()).commit();
+                getSupportFragmentManager().beginTransaction().replace(R.id.main_container, new NewPostFragment(this)).commit();
                 break;
             default:
                 Log.e("Fragment", "Invalid Fragment type");

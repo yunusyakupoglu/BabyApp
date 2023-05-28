@@ -11,6 +11,8 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
 import android.provider.MediaStore;
 import android.view.LayoutInflater;
@@ -18,6 +20,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Toast;
@@ -27,15 +30,16 @@ import com.example.babyapp.repositories.db.BabyAppDatabase;
 import com.example.babyapp.repositories.db.daos.PostDao;
 import com.example.babyapp.repositories.db.entities.Post;
 import com.google.android.material.appbar.MaterialToolbar;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 import java.io.File;
 
 public class NewPostFragment extends Fragment {
     private String selectedImageData;
-    private MaterialToolbar toolbar;
     private EditText txtDescription, txtTitle;
     private ImageButton imgButton;
-
+    private Button btnPostSave;
     private BabyAppDatabase db;
 
     private MainActivity mainActivity;
@@ -44,8 +48,8 @@ public class NewPostFragment extends Fragment {
 
     private static final int IMAGE_PICK_MODE = 1000;
     private static final int PERMISSION_CODE = 1001;
-    public NewPostFragment() {
-        // Required empty public constructor
+    public NewPostFragment(MainActivity mainActivity) {
+        this.mainActivity = mainActivity;
     }
 
 
@@ -69,10 +73,10 @@ public class NewPostFragment extends Fragment {
         db = BabyAppDatabase.getDatabase(mainActivity);
         dao = db.postDao();
         //  rv = findViewById(R.id.recyclerView_main);
-        toolbar = view.findViewById(R.id.materialToolbar);
         txtDescription = view.findViewById(R.id.txtDescription);
         txtTitle = view.findViewById(R.id.txtTitle);
         imgButton = view.findViewById(R.id.imageButton);
+        btnPostSave = view.findViewById(R.id.btnPostSave);
     }
 
     private void registerEventHandlers(){
@@ -96,6 +100,24 @@ public class NewPostFragment extends Fragment {
                     // system os is less then marsmallow
                     pickImageFromGallery();
                 }
+            }
+        });
+
+        btnPostSave.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                Post post = new Post();
+                post.UserId = user.getUid();
+                post.description = txtDescription.getText().toString();
+                post.title = txtTitle.getText().toString();
+                post.fileUri = selectedImageData;
+                dao.insert(post);
+                    // Yönlendirme işlemi
+                    FragmentManager fragmentManager = mainActivity.getSupportFragmentManager();
+                    FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                    fragmentTransaction.replace(R.id.main_container, new HomeFragment(mainActivity));
+                    fragmentTransaction.commit();
             }
         });
     }
@@ -158,34 +180,4 @@ public class NewPostFragment extends Fragment {
         startActivityForResult(imageIntent, 1);
     }
 
-    private void setToolbar(){
-        mainActivity.setSupportActionBar(toolbar);
-    }
-
-    public boolean onCreateOptionsMenu(Menu menu) {
-        mainActivity.getMenuInflater().inflate(R.menu.toolbar_menu,menu);
-        return true;
-    }
-
-
-
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.home:
-                mainActivity.finish();
-                mainActivity.overridePendingTransition(R.anim.stay, R.anim.slide_down);
-                return true;
-            case R.id.insert:
-                Post post = new Post();
-                post.description = txtDescription.getText().toString();
-                post.title = txtTitle.getText().toString();
-                post.fileUri = selectedImageData;
-                dao.insert(post);
-                Toast.makeText(mainActivity, "Post başarıyla kaydedildi.", Toast.LENGTH_SHORT).show();
-                homeFragment.reloadData();
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }
 }

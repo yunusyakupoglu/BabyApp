@@ -1,6 +1,9 @@
 package com.example.babyapp.views;
 
+import static android.content.ContentValues.TAG;
+
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,16 +17,25 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class SignUpFragment extends Fragment {
     private FirebaseAuth auth;
-    private EditText signUpEmail, signUpPassword;
+
+    private FirebaseFirestore store;
+    private EditText signUpEmail, signUpPassword, signUpUsername;
     private Button signUpButton;
     private TextView loginRedirectText;
 
+    private String userId;
     public SignUpFragment() {
         // Required empty public constructor
     }
@@ -32,6 +44,7 @@ public class SignUpFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         auth = FirebaseAuth.getInstance();
+        store = FirebaseFirestore.getInstance();
     }
 
     @Override
@@ -42,6 +55,7 @@ public class SignUpFragment extends Fragment {
 
         signUpEmail = view.findViewById(R.id.signUp_email);
         signUpPassword = view.findViewById(R.id.signUp_password);
+        signUpUsername = view.findViewById(R.id.signUp_username);
         signUpButton = view.findViewById(R.id.signUp_button);
         loginRedirectText = view.findViewById(R.id.loginRedirectText);
 
@@ -50,7 +64,7 @@ public class SignUpFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 // sign up the user
-                signUpUser(signUpEmail.getText().toString(), signUpPassword.getText().toString());
+                signUpUser(signUpEmail.getText().toString(), signUpPassword.getText().toString(), signUpUsername.getText().toString());
             }
         });
 
@@ -65,8 +79,7 @@ public class SignUpFragment extends Fragment {
 
         return view;
     }
-
-    private void signUpUser(String email, String password) {
+    private void signUpUser(@NonNull String email, String password, String username) {
         // implement the sign up logic using FirebaseAuth
         if (email.isEmpty()){
             signUpEmail.setError("Email cannot be empty");
@@ -79,6 +92,21 @@ public class SignUpFragment extends Fragment {
                 public void onComplete(@NonNull Task<AuthResult> task) {
                     if (task.isSuccessful()){
                         Toast.makeText(getContext(),"Signup successful", Toast.LENGTH_SHORT).show();
+                        userId = auth.getCurrentUser().getUid();
+                        Map<String, Object> user = new HashMap<>();
+                        user.put("userId",userId);
+                        user.put("username",username);
+                        user.put("profilephoto",null);
+                        store.collection("user").document(userId).set(user).addOnCompleteListener(new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                if (task.isSuccessful()){
+                                    Log.d(TAG, "onSuccess: user Profile is created for" + userId);
+                                } else {
+                                    Log.e(TAG, "onError: " + task.getException().getMessage());
+                                }
+                            }
+                        });
                         ((AuthActivity)getActivity()).loadFragment(new SignInFragment());
                     } else {
                         Toast.makeText(getContext(),"Signup Failed: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
@@ -87,6 +115,7 @@ public class SignUpFragment extends Fragment {
             });
         }
     }
+
 
 
 }

@@ -16,6 +16,16 @@ public class Post implements Serializable {
 
     public String description;
 
+    public String UserId;
+
+    public String getUserId() {
+        return UserId;
+    }
+
+    public void setUserId(String userId) {
+        UserId = userId;
+    }
+
     public long getId() {
         return id;
     }

@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    tools:context=".SignInFragment">
+    tools:context="views.SignInFragment">
 
     <ImageView
         android:id="@+id/imageView"
@@ -37,6 +37,20 @@
         android:layout_marginRight="20dp"
         android:textColor="@color/black"
         android:background="@drawable/custom_edittext" />
+
+    <EditText
+        android:id="@+id/signUp_username"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginTop="340dp"
+        android:layout_marginRight="20dp"
+        android:background="@drawable/custom_edittext"
+        android:drawableLeft="@drawable/baseline_person_24"
+        android:drawablePadding="8dp"
+        android:hint="Email"
+        android:padding="8dp"
+        android:textColor="@color/black" />
 
     <EditText
         android:id="@+id/signUp_password"
